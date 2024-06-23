@@ -13,12 +13,13 @@ var grey_cell = preload("res://Textures/Roles/Grey.png")
 var green_cell = preload("res://Textures/Roles/Green.png") # change to numbers
 var flag_cell = preload("res://Textures/Roles/Anchor.png")
 var death_cell = preload("res://Textures/Roles/Death.png")
-var Header = Control.new()
+var mine_icon = preload("res://Textures/Roles/Collector.png")
 var time_lapse_label = Label.new()
 var flag_count_label = Label.new()
 var mine_count_label = Label.new()
 var mine_text_field = LineEdit.new()
-
+var flag_icon = Sprite2D.new()
+var timer = Timer.new()
 
 
 

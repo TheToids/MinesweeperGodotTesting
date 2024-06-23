@@ -17,35 +17,69 @@ var grey_cell =  Globals.grey_cell
 var green_cell =  Globals.green_cell
 var flag_cell =  Globals.flag_cell
 var death_cell =  Globals.death_cell
-var Header = Globals.Header
+#var Header = Globals.Header
 var time_lapse_label = Globals.time_lapse_label
 
+func _init():
+	pass
 
 func _ready():
-	get_parent().call_deferred("add_child", Header)
+	#get_parent().call_deferred("add_child", $"../Header")
 	self.size = grid_size #default
 	self.position = (get_parent().get_viewport_rect().size / 2) - (self.size / 2) #default
+	Globals.mine_text_field.text_submitted.connect(_on_LineEdit_text_submitted)
 	chooseMines()
 	popGrid()
-	Globals.mine_text_field.text_changed.connect(_on_LineEdit_text_changed)
-	#setupLabelsForHeader()
+	#Globals.timer.wait_time = 1.0
+	#Globals.timer.one_shot = false
+	#Globals.timer.timeout.connect(_on_timer_timeout)
+	#$"../Header".add_child(Globals.timer)
+	#Globals.timer.start()
+	
+	#var style_box = StyleBoxFlat.new()
+	#style_box.border_width_left = 1
+	#style_box.border_width_top = 1
+	#style_box.border_width_right = 1
+	#style_box.border_width_bottom = 1
+	#style_box.border_color = Color(1, 0, 0, 1)  # Red color
+	#self.set("custom_styles/default", style_box)
+	
 
-func _on_LineEdit_text_changed(event): #breaks code
-	print("changed")
+func _on_timer_timeout():
+	pass
+	#Globals.time_lapse_label.text = str(Globals.timer.time_left)
+
+func _on_LineEdit_text_submitted(event): #breaks code
 	chooseMines()
 	popGrid()
+	#print(Globals.mine_positions)
+
+func format_time(time_in_seconds):
+	var hours = int(time_in_seconds / 3600)
+	var minutes = int((time_in_seconds % 3600) / 60)
+	var seconds = int(time_in_seconds % 60)
+	return "%sh %sm %ss" % [hours, minutes, seconds]
 
 func _process(delta):
-	#print(flag_count)
 	time_lapse += delta
-	time_lapse_label.text = str(int(time_lapse))
+	time_lapse_label.text = format_time(int(time_lapse))
+	#var time_seconds = int(time_lapse)
+	#if time_seconds > 3600:
+		#var hours = time_seconds / 3600
+		#var minutes = (time_seconds % 3600) / 60
+		#var seconds = time_seconds % 60
+		#time_seconds = str(hours) + "h" + str(minutes) + "m" + str(seconds) + "s"
+	#elif time_seconds > 60:
+		#var minutes = time_seconds / 60
+		#var seconds = time_seconds % 60
+		#time_seconds = str(minutes) + "m" + str(seconds) + "s"
+	#else:
+		#time_seconds = str(time_seconds) + "s"
+
 	Globals.flag_count_label.text = str(Globals.flag_count)
-	if Globals.mines - Globals.flag_count > 0: Globals.mine_count_label.text = str(Globals.mines - Globals.flag_count)
-	else: Globals.mine_count_label.text = "0"
 	
-	#print(time_lapse_label.text)
-	#print(time_lapse_label.get_minimum_size())
 	if Input.is_action_just_pressed("click"):
+		print(Globals.mines)
 		var mouse_position = get_local_mouse_position()
 		for sprite in cell_sprites.keys():
 			var cell_rect = Rect2(sprite.position, cell_size)
@@ -53,9 +87,7 @@ func _process(delta):
 				if cell_sprites[sprite]["mine"] == true:
 					sprite.texture = death_cell 
 				elif sprite.texture == grey_cell or cell_sprites[sprite]["mine"] == false:
-					#print("placeholder")
 					clearNeighbors(sprite)
-				#print("got" + str(cell_sprites.keys().find(sprite))) <- use something like that for mines
 				break
 	
 	if Input.is_action_just_pressed("rightclick"):
@@ -68,35 +100,52 @@ func _process(delta):
 					if sprite.get_child(0): 
 						sprite.texture = green_cell
 						sprite.get_child(0).visible = true
+						Globals.flag_count -= 1
 						break
 					sprite.texture = grey_cell
 					Globals.flag_count -= 1
 				else: 
 					sprite.texture = flag_cell
-					if sprite.get_child(0): sprite.get_child(0).visible = false
-					
+					if sprite.get_child(0): 
+						if sprite.get_child(1): sprite.get_child(1).visible = false
+						sprite.get_child(0).visible = false
 					Globals.flag_count += 1
 				break		
 				
 func chooseMines():
-	for cell_x in range(grid_sides.x):
-		for cell_y in range(grid_sides.y):
-			cell_positions.append(Vector2(cell_x, cell_y) * cell_size)
-	while mines > 0:
-		var mine_loc = cell_positions[randi_range(0, len(cell_positions) - 1)]
-		if mine_loc in mine_positions:
+	clear()
+	#move this for loop to popgrid?
+	for cell_x in range(Globals.grid_sides.x):
+		for cell_y in range(Globals.grid_sides.y):
+			Globals.cell_positions.append(Vector2(cell_x, cell_y) * Globals.cell_size)
+	while Globals.mines > 0:
+		var mine_loc = Globals.cell_positions[randi_range(0, len(Globals.cell_positions) - 1)]
+		#if Globals.mine_positons.has(mine_loc):
+		if mine_loc in Globals.mine_positions:
 			continue
-		mine_positions.append(mine_loc)
-		mines -= 1
+		Globals.mine_positions.append(mine_loc)
+		Globals.mines -= 1
 	
 
+func clear():
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	Globals.mine_positions.clear()
+	Globals.cell_positions.clear()
+	cell_sprites.clear()
+
 func popGrid():
+	################################################
+	Globals.timer.stop()
+	Globals.timer.start()
 	for y in range(grid_sides.y):
 		for x in range(grid_sides.x):
 			var sprite = Sprite2D.new()
 			sprite.centered = false
 			sprite.texture = grey_cell
-			sprite.scale = Vector2(4, 4)
+			#sprite.scale = Vector2(4, 4)
+			sprite.scale = Globals.cell_size / sprite.get_rect().size
 			sprite.position += Vector2(x, y) * cell_size 
 			self.add_child(sprite)
 			cell_sprites[sprite] = {}
@@ -107,6 +156,8 @@ func popGrid():
 			else:
 				cell_sprites[sprite]["mine"] = false #make a nested dictionary ?
 	buildMineNeighbors()
+	#print(self.get_children())
+	#print(mine_positions)
 
 func buildMineNeighbors():
 	var directions = [Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1), Vector2(-1, 0), Vector2(1, 0), Vector2(-1, 1), Vector2(0, 1), Vector2(1, 1)]
@@ -151,3 +202,5 @@ func get_node_at_position(pos):
 		if sprite.position == pos:
 			return sprite
 	return null
+
+

@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://dtckkmvbe7edm"]
+
+[ext_resource type="Script" path="res://Scenes/canvas.gd" id="1_v4vrk"]
+[ext_resource type="Script" path="res://Scenes/grid.gd" id="2_3rufg"]
+
+[node name="Canvas" type="Node2D"]
+script = ExtResource("1_v4vrk")
+
+[node name="Grid" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("2_3rufg")
